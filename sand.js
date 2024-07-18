@@ -1,14 +1,15 @@
 // DBTow Falling Sand Simulator
 
 class Grid {
-    constructor(width, height) {
-        this.initialize(width, height);
+    constructor(width, height, particleSize) {
+        this.initialize(width, height, particleSize);
     }
 
-    initialize(width, height) {
-        this.width = width;
-        this.height = height;
-        this.grid = new Array(width * height).fill(0);
+    initialize(width, height, particleSize) {
+        this.width = Math.floor(width / particleSize);
+        this.height = Math.floor(height / particleSize);
+        this.particleSize = particleSize;
+        this.grid = new Array(this.width * this.height).fill(0);
     }
 
     clear() {
@@ -16,7 +17,21 @@ class Grid {
     }
 
     set(x, y, color) {
-        this.grid[y * this.width + x] = color;
+        const gridX = Math.floor(x / this.particleSize);
+        const gridY = Math.floor(y / this.particleSize);
+        if (gridX >= 0 && gridX < this.width && gridY >= 0 && gridY < this.height) {
+            this.grid[gridY * this.width + gridX] = color;
+        }
+    }
+
+    setCircle(x, y, colorFn, radius, probability) {
+        for (let dy = -radius; dy <= radius; dy++) {
+            for (let dx = -radius; dx <= radius; dx++) {
+                if (dx*dx + dy*dy <= radius*radius && Math.random() < probability) {
+                    this.set(x + dx * this.particleSize, y + dy * this.particleSize, colorFn());
+                }
+            }
+        }
     }
 
     swap(a, b) {
@@ -44,7 +59,11 @@ class Grid {
             }
             // If we can't move straight down, try diagonal left
             else if(i % this.width !== 0 && this.isEmpty(belowLeft)) {
-                this.swap(i, belowRight);
+                this.swap(i, belowLeft);
+            }
+            // If we can't move diagonal left, try diagonal right
+            else if ((i + 1) % this.width !== 0 && this.isEmpty(belowRight)) {
+                this.swap(i, belowRight)
             }
         }
     }
@@ -76,30 +95,31 @@ function varyColor(color) {
 
 const canvas = document.getElementById('sandCanvas');
 const ctx = canvas.getContext('2d');
-const grid = new Grid(canvas.width, canvas.height);
+let grid;
 
-canvas.addEventListener('mousedown', (event) => {
-    const rect = canvas.getBoundingClientRect();
-    const x = Math.floor(event.clientX - rect.left);
-    const y = Math.floor(event.clientY - rect.top);
-    const color = varyColor(sandColor);
-    grid.set(x, y, color);
-    drawGrid();
-});
+// Initial Particle Size Setup
+let particleSize = 3;
+let dropRadius = 2;
+let dropProbability = 0.5;
 
-
-
-const backgroundColor = 'rgb(240, 240, 240'; // Light grey background
+const backgroundColor = 'rgb(220, 220, 220)'; // Light grey background
 
 function drawGrid() {
     const imageData = ctx.createImageData(canvas.width, canvas.height);
-    for (let i = 0; i < grid.grid.length; i++) {
-        const color = grid.grid[i] || backgroundColor;
-        const rgb = color.startsWith('hsl') ? hslToRgb(color) : parseRgb(color);
-        imageData.data[i * 4] = rgb[0];
-        imageData.data[i * 4 + 1] = rgb[1];
-        imageData.data[i * 4 + 2] = rgb[2];
-        imageData.data[i * 4 + 3] = 255;  // Full opacity
+    for (let y = 0; y < grid.height; y++) {
+        for (let x = 0; x < grid.width; x++) {
+            const color = grid.grid[y * grid.width + x] || backgroundColor;
+            const rgb = color.startsWith('hsl') ? hslToRgb(color) : parseRgb(color);
+            for (let dy = 0; dy < grid.particleSize; dy++) {
+                for (let dx=0; dx < grid.particleSize; dx++) {
+                    const pixelIndex = ((y * grid.particleSize + dy) * canvas.width + (x * grid.particleSize + dx)) * 4;
+                    imageData.data[pixelIndex] = rgb[0];
+                    imageData.data[pixelIndex + 1] = rgb[1];
+                    imageData.data[pixelIndex + 2] = rgb[2];
+                    imageData.data[pixelIndex + 3] = 255;
+                }
+            }
+        }
     }
     ctx.putImageData(imageData, 0, 0);
 }
@@ -146,10 +166,66 @@ function hslToRgb(hslColor) {
     return [0, 0, 0];
 }
 
-// Initialize the canvas size
-canvas.width = 400;
-canvas.height = 400;
-grid.initialize(canvas.width, canvas.height);
+function initializeCanvas() {
+    canvas.width = 600;
+    canvas.height = 400;
+    grid = new Grid(canvas.width, canvas.height, particleSize);
+}
+
+function dropSand(x, y) {
+    grid.setCircle(
+        x,
+        y,
+        () => varyColor(sandColor),
+        dropRadius,
+        dropProbability
+    );
+}
+
+
+// Mouse Functionalities
+function onMouseDown(event) {
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    dropSand(x, y);
+}
+
+let isMouseDown = false;
+canvas.addEventListener('mousedown', (event) => {
+    isMouseDown = true;
+    onMouseDown(event);
+});
+
+canvas.addEventListener('mousemove', (event) => {
+    if (isMouseDown) {
+        onMouseDown(event);
+    }
+});
+
+canvas.addEventListener('mouseup', () => {
+    isMouseDown = false;
+});
+
+canvas.addEventListener('mouseleave', () => {
+    isMouseDown = false;
+});
+
+// Control Panel Functionality
+const particleSizeInput = document.getElementById('particleSize');
+const particleSizeValue = document.getElementById('particleSizeValue');
+
+particleSizeInput.addEventListener('input', (event) => {
+    particleSize = parseInt(event.target.value);
+    particleSizeValue.textContent = particleSize;
+    initializeCanvas();
+});
+
+// Clear Function
+document.getElementById('clearCanvas').addEventListener('click', () => {
+    grid.clear();
+});
+
 
 // Main simulation loop
 function update() {
@@ -158,4 +234,5 @@ function update() {
     requestAnimationFrame(update);
 }
 
+initializeCanvas();
 update();
