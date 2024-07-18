@@ -1,11 +1,36 @@
 body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f0f0f0;
+}
+
+header {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+}
+
+h1, h2 {
+    margin: 0;
+}
+
+h1 {
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+h2 {
+    font-size: 18px;
+    font-weight: normal;
+    color: #666;
+}
+
+main {
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    height: 100vh;
-    margin: 0;
-    background-color: #f0f0f0;
-    font-family: Arial, sans-serif;
+    margin-top: 80px; /* To give space for the header */
 }
 
 #canvasContainer {
@@ -45,7 +70,7 @@ input[type="range"] {
 
 button {
     padding: 10px 20px;
-    background-color: #4CAF50;
+    background-color: #808080; /* Changed to grey */
     color: white;
     border: none;
     border-radius: 3px;
@@ -54,5 +79,5 @@ button {
 }
 
 button:hover {
-    background-color: #45a049;
+    background-color: #A9A9A9;
 }
