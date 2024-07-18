@@ -4,14 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Falling Sand Simulator</title>
-    <style>
-        canvas {
-            border: 1px solid black;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <canvas id="sandCanvas"></canvas>
+    <h1>Falling Sand Simulator</h1>
+    <h2>Created by DBTow</h2>
+    <div id="canvasContainer">
+        <canvas id="sandCanvas"></canvas>
+    </div>
+    <div id="controlPanel">
+        <div class="control">
+            <label for="particleSize">Particle Size:</label>
+            <input type="range" id="particleSize" min="1" max="10" value="3">
+            <span id="particleSizeValue">3</span>
+        </div>
+        <div class="control">
+            <button id="clearCanvas">Clear Canvas</button>
+        </div>
+    </div>
+    
     <script src="sand.js"></script>
 </body>
 </html>
