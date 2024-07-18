@@ -28,6 +28,34 @@ class Grid {
     isEmpty(index) {
         return this.grid[index] === 0;
     }
+
+    updatePixel(i) {
+        if (this.grid[i] === 0) return; // Skip empty cells
+
+        const below = i + this.width;
+        const belowLeft = below - 1;
+        const belowRight = below + 1;
+
+        // Check if we're not at the bottom edge
+        if (below < this.grid.length) {
+            // If there's empty space below, move down
+            if (this.isEmpty(below)) {
+                this.swap(i, below);
+            }
+            // If we can't move straight down, try diagonal left
+            else if(i % this.width !== 0 && this.isEmpty(belowLeft)) {
+                this.swap(i, belowRight);
+            }
+        }
+    }
+
+    update() {
+        // Iterate from bottom to top, right to left
+        for (let i = this.grid.length - 1; i >= 0; i--) {
+            this.updatePixel(i);
+        }
+    }
+
 }
 
 
@@ -125,7 +153,7 @@ grid.initialize(canvas.width, canvas.height);
 
 // Main simulation loop
 function update() {
-    // Implmenet gravity logic here
+    grid.update();
     drawGrid();
     requestAnimationFrame(update);
 }
